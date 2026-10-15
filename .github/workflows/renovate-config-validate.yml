@@ -1,0 +1,41 @@
+---
+# renovate-config-validator を使って Renovate の設定ファイルを検証する
+#
+# - renovate.json5: このリポジトリ自体の設定
+# - default.json5: 他のリポジトリから extends する共通設定（プリセット）
+# - https://docs.renovatebot.com/config-validation/
+# - https://github.com/suzuki-shunsuke/github-action-renovate-config-validator
+name: Renovate Config Validate
+
+on:
+  pull_request:
+    paths:
+      - renovate.json5
+      - default.json5
+      - .github/workflows/renovate-config-validate.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  renovate-config-validate:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate renovate.json5
+        uses: suzuki-shunsuke/github-action-renovate-config-validator@1e1604219a6b38ae9a10aff42a28a3656322c31a # v2.4.1
+        with:
+          config_file_path: renovate.json5
+
+      - name: Validate default.json5
+        uses: suzuki-shunsuke/github-action-renovate-config-validator@1e1604219a6b38ae9a10aff42a28a3656322c31a # v2.4.1
+        with:
+          config_file_path: default.json5

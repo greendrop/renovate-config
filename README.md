@@ -31,3 +31,21 @@ JSON5 のプリセットはファイル名まで指定する必要がある（`g
 
 リポジトリ側で同じキーを指定すると上書きされる（`labels` は置き換え。追加したいときは `addLabels` を使う）。
 `packageRules` はリポジトリ側の指定がプリセットの後ろに追加されるので、共通のラベル付けは残ったまま個別のルールを足せる。
+
+## 開発
+
+ツール（actionlint・ghalint・zizmor・yamlfmt・betterleaks・lefthook）は [mise](https://mise.jdx.dev/) でバージョンを固定している。
+
+```bash
+# lefthook install も自動実行される
+mise install
+```
+
+PR では次のワークフローが動く。
+
+| ワークフロー | 処理 |
+| --- | --- |
+| `secret-scan` | betterleaks で差分コミットから秘密情報を検出 |
+| `renovate-config-validate` | renovate-config-validator で `renovate.json5` / `default.json5` を検証 |
+| `yaml-lint` | yamlfmt で YAML を lint |
+| `github-actions-lint` | actionlint・ghalint・zizmor でワークフローを lint |

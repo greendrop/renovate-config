@@ -1,0 +1,19 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+
+  // このリポジトリの共通設定（default.json5）を継承
+  extends: ['github>greendrop/renovate-config:default.json5'],
+
+  // 有効化するマネージャー（ここに挙げたもの以外は無効）
+  enabledManagers: ['github-actions', 'mise'],
+
+  packageRules: [
+    {
+      matchManagers: ['github-actions', 'mise'],
+      // minor / patch は CI 通過後に GitHub の自動マージ機能でマージする
+      matchUpdateTypes: ['minor', 'patch'],
+      automerge: true,
+      platformAutomerge: true
+    }
+  ]
+}

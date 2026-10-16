@@ -31,6 +31,11 @@
     {
       matchManagers: ['npm'],
       addLabels: ['javascript']
+    },
+    // Terraform / OpenTofu
+    {
+      matchManagers: ['terraform'],
+      addLabels: ['terraform']
     }
   ],
 

@@ -27,7 +27,7 @@ JSON5 のプリセットはファイル名まで指定する必要がある（`g
 | `timezone` / `schedule` | `Asia/Tokyo` / 毎日 9 時台 |
 | `labels` | `dependencies` |
 | `rebaseWhen` | `never` |
-| `packageRules` | マネージャごとのラベル（`github-actions` → `github-actions`、`mise` → `mise`、`npm` → `javascript`） |
+| `packageRules` | マネージャごとのラベル（`github-actions` → `github-actions`、`mise` → `mise`、`npm` → `javascript`、`terraform` → `terraform`） |
 
 リポジトリ側で同じキーを指定すると上書きされる（`labels` は置き換え。追加したいときは `addLabels` を使う）。
 `packageRules` はリポジトリ側の指定がプリセットの後ろに追加されるので、共通のラベル付けは残ったまま個別のルールを足せる。

@@ -23,7 +23,7 @@ JSON5 のプリセットはファイル名まで指定する必要がある（`g
 | 設定 | 値 |
 | --- | --- |
 | `extends` | `config:recommended` |
-| `minimumReleaseAge` | `7 days` |
+| `minimumReleaseAge` | `7 days`（自分で管理している `greendrop/gha-workflows` は対象外） |
 | `timezone` / `schedule` | `Asia/Tokyo` / 毎日 9 時台 |
 | `labels` | `dependencies` |
 | `rebaseWhen` | `never` |

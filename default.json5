@@ -36,6 +36,13 @@
     {
       matchManagers: ['terraform'],
       addLabels: ['terraform']
+    },
+    // 自分で管理している共通ワークフロー（gha-workflows）はリリース直後から取り込む
+    // （サプライチェーン攻撃への備えである minimumReleaseAge の待ち期間は、自分のリリースには不要）
+    {
+      matchManagers: ['github-actions'],
+      matchPackageNames: ['greendrop/gha-workflows'],
+      minimumReleaseAge: null
     }
   ],
 

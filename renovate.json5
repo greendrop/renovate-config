@@ -8,12 +8,18 @@
   enabledManagers: ['github-actions', 'mise'],
 
   packageRules: [
+    // major / minor / patch の PR は deps-ai-review ワークフローで AI エージェントがレビューする
+    // 付けるのは deps-ai-review:pending だけ。以降の状態ラベルはワークフローが付け替える
     {
-      matchManagers: ['github-actions', 'mise'],
-      // minor / patch は CI 通過後に GitHub の自動マージ機能でマージする
-      matchUpdateTypes: ['minor', 'patch'],
-      automerge: true,
-      platformAutomerge: true
+      matchUpdateTypes: ['major', 'minor', 'patch'],
+      addLabels: ['deps-ai-review:pending']
+    },
+    // deps-ai-review:manual-merge を付けた PR は、AI レビューが pass でも自動マージせず、レビュー結果だけ示して手動でマージする
+    // 付けない PR（minor / patch）は、pass なら自動マージする
+    // メジャー更新でも自動マージしてよいパッケージは、否定パターンで除外する（例: matchPackageNames: ['!actions/checkout']）
+    {
+      matchUpdateTypes: ['major'],
+      addLabels: ['deps-ai-review:manual-merge']
     }
   ]
 }

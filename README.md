@@ -49,3 +49,5 @@ PR では次のワークフローが動く。
 | `renovate-config-validate` | renovate-config-validator で `renovate.json5` / `default.json5` を検証 |
 | `yaml-lint` | yamlfmt で YAML を lint |
 | `github-actions-lint` | actionlint・ghalint・zizmor でワークフローを lint |
+
+このリポジトリ自体の依存（GitHub Actions・mise のツール）は `renovate.json5` で更新する。Renovate の PR には `deps-ai-review:pending` ラベルが付き、`deps-ai-review` ワークフローで AI エージェントがレビューする（仕組みは [greendrop/gha-workflows](https://github.com/greendrop/gha-workflows) の README を参照）。minor / patch は pass なら自動マージし（Actions variable `DEPS_AI_REVIEW_AUTO_MERGE` が `true` のとき）、major は `deps-ai-review:manual-merge` が付いて手動でマージする。

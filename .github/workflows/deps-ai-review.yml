@@ -1,0 +1,103 @@
+---
+# Renovate の更新 PR を AI エージェント（anthropics/claude-code-action）でレビューし、pass なら auto-merge を有効にする
+#
+# - gha-workflows の composite action（actions/deps-ai-review/prepare・review・finalize）を使う
+#   https://github.com/greendrop/gha-workflows（判定・ラベル・自動マージの仕組みは README を参照）
+# - 判定結果はラベル（deps-ai-review:*）と PR コメントで表す
+# - レビュー対象の PR には Renovate が deps-ai-review:pending を付ける（対象の条件は renovate.json5 で指定する）
+# - ジョブの構成（AI エージェントには書き込み権限を渡さないように分ける）
+#   - prepare: PR の状態を調べ、レビューするかを決める（書き込み権限あり）
+#   - review: AI エージェントがレビューする（読み取り権限だけ）
+#   - finalize: 判定結果をラベル・auto-merge・コメントに反映する（書き込み権限あり）
+# - 必要な設定:
+#   - secrets.CLAUDE_CODE_OAUTH_TOKEN: Claude の OAuth トークン（Pro / Max プランで claude setup-token で発行）
+#   - secrets.GH_APPS_AI_REVIEW_CLIENT_ID / secrets.GH_APPS_AI_REVIEW_PRIVATE_KEY: AI レビュー用の GitHub App（任意）
+#   - vars.DEPS_AI_REVIEW_CLAUDE_MODEL: モデル（任意。未設定なら Claude Code の既定）
+#   - vars.DEPS_AI_REVIEW_AUTO_MERGE: true で AI が approve した PR を自動マージする（既定値: 無効）
+#   - vars.DEPS_AI_REVIEW_MERGE_METHOD: マージ方法（MERGE / SQUASH / REBASE。既定値: MERGE）
+name: deps-ai-review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+      - unlabeled
+
+# 途中キャンセルでラベルが中途半端に残るのを防ぐため、PR ごとにキャンセルせずに順番に実行する
+concurrency:
+  group: deps-ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    outputs:
+      target: ${{ steps.prepare.outputs.target }}
+      review-needed: ${{ steps.prepare.outputs.review-needed }}
+    steps:
+      # 依存を参照しているコード・パッチの有無を調べるため、リポジトリ全体を取得する
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare review
+        id: prepare
+        uses: greendrop/gha-workflows/actions/deps-ai-review/prepare@cc3118adf62df48a08910f4f66c63192d77d244f # v0.3.0
+        with:
+          app-client-id: ${{ secrets.GH_APPS_AI_REVIEW_CLIENT_ID }}
+          app-private-key: ${{ secrets.GH_APPS_AI_REVIEW_PRIVATE_KEY }}
+
+  review:
+    needs: prepare
+    if: needs.prepare.outputs.review-needed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # AI エージェントには読み取り権限だけを渡す（プロンプトインジェクションでコメント・コミット・ラベル操作をさせない）
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Review with AI agent
+        uses: greendrop/gha-workflows/actions/deps-ai-review/review@cc3118adf62df48a08910f4f66c63192d77d244f # v0.3.0
+        with:
+          claude-code-oauth-token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          dependencies-installed: false
+          instructions: 個人のリポジトリで共通に使う Renovate の設定（shareable config preset）を管理するリポジトリです。依存は GitHub Actions と mise で管理する lint ツール（actionlint・ghalint・zizmor・yamlfmt・betterleaks・lefthook）です
+          claude-model: ${{ vars.DEPS_AI_REVIEW_CLAUDE_MODEL }}
+
+  finalize:
+    needs:
+      - prepare
+      - review
+    # prepare・review が失敗・キャンセルされても実行し、error を反映する（pending のまま PR が塞がれた状態で残らないようにする）
+    if: always() && needs.prepare.outputs.target == 'true'
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Apply verdict
+        uses: greendrop/gha-workflows/actions/deps-ai-review/finalize@cc3118adf62df48a08910f4f66c63192d77d244f # v0.3.0
+        with:
+          review-result: ${{ needs.review.result }}
+          app-client-id: ${{ secrets.GH_APPS_AI_REVIEW_CLIENT_ID }}
+          app-private-key: ${{ secrets.GH_APPS_AI_REVIEW_PRIVATE_KEY }}
+          auto-merge: ${{ vars.DEPS_AI_REVIEW_AUTO_MERGE }}
+          merge-method: ${{ vars.DEPS_AI_REVIEW_MERGE_METHOD || 'MERGE' }}

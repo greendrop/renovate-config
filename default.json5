@@ -46,6 +46,6 @@
     }
   ],
 
-  // Renovate 側から自動リベースしない（手動で解決する運用）
-  rebaseWhen: 'never'
+  // コンフリクトした場合のみ Renovate が自動でリベースする
+  rebaseWhen: 'conflicted'
 }

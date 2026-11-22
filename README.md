@@ -26,7 +26,7 @@ JSON5 のプリセットはファイル名まで指定する必要がある（`g
 | `minimumReleaseAge` | `7 days`（自分で管理している `greendrop/gha-workflows` は対象外） |
 | `timezone` / `schedule` | `Asia/Tokyo` / 毎日 9 時台 |
 | `labels` | `dependencies` |
-| `rebaseWhen` | `never` |
+| `rebaseWhen` | `conflicted`（コンフリクト時のみ rebase） |
 | `packageRules` | マネージャごとのラベル（`github-actions` → `github-actions`、`mise` → `mise`、`npm` → `javascript`、`terraform` → `terraform`） |
 
 リポジトリ側で同じキーを指定すると上書きされる（`labels` は置き換え。追加したいときは `addLabels` を使う）。
